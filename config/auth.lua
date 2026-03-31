@@ -66,6 +66,8 @@ function _M.inject_bearer_from_env(env_var)
 end
 
 -- Injects a GitHub Bearer token from env or fetched via git-credentials (when GitHub App is enabled), with caching.
+-- If neither PAT nor GitHub App token is available, falls back to the OAuth token already present in
+-- the incoming Authorization header (injected by the system) — no header modification is performed.
 -- shared_dict_name: name of the lua_shared_dict defined in nginx.conf
 function _M.inject_github_token(shared_dict_name)
     local cache = ngx.shared[shared_dict_name]
@@ -75,14 +77,11 @@ function _M.inject_github_token(shared_dict_name)
         token = github_token()
     end
 
-    if not token or #token == 0 then
-        ngx.status = 502
-        ngx.say("failed to obtain GitHub token")
-        ngx.exit(502)
-    else
+    if token and #token > 0 then
         cache:set("token", token, 3300)
         ngx.req.set_header("Authorization", "Bearer " .. token)
     end
+    -- else: no PAT or GitHub App token found; rely on the OAuth token already in the Authorization header
 end
 
 return _M
