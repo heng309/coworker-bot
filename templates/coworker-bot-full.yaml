@@ -157,15 +157,14 @@ endpoints:
   # GitHub MCP internal endpoint
   # DELETE if not using GitHub.
   # type: INTERNAL — not publicly accessible, only reachable within the sandbox.
-  # Backend is github-mcp for per user oauth identity from crafting system.
-  # Backend is dev for proxy which injects the Authorization header from github app or PAT.
+  # Routed through mcp proxy which injects the Authorization header.
   # ---------------------------------------------------------------------------
   - name: github-mcp
     type: INTERNAL
     http:
       routes:
         - backend:
-            target: github-mcp
+            target: dev
             port: github
           path_prefix: /
       auth_proxy:
